@@ -61,6 +61,7 @@ public class SecurityConfig {
                         // Endpoints públicos (sin autenticación)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/enums/**").permitAll()
+                        .requestMatchers("/api/chat/**").hasAnyRole("USUARIO", "ADMINISTRADOR")
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
