@@ -135,7 +135,7 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/roles"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].name").exists())
+                .andExpect(jsonPath("$[0].value").exists())
                 .andExpect(jsonPath("$[0].description").exists());
     }
 }

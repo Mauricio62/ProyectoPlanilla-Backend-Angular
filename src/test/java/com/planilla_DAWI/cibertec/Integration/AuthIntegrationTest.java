@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Pruebas de Integración - Autenticación")
 @Transactional
 class AuthIntegrationTest {
@@ -37,10 +35,24 @@ class AuthIntegrationTest {
     @Test
     @DisplayName("Caso 1: Login exitoso con credenciales válidas")
     void testLoginExitoso() throws Exception {
-        // Precondición: Usuario debe existir en la base de datos
-        // Pasos: Enviar POST a /api/auth/login con credenciales válidas
+        // Precondición: Crear un usuario primero
+        // Pasos: 1. Registrar usuario, 2. Hacer login con ese usuario
         
-        LoginRequestDto loginRequest = new LoginRequestDto("admin", "password123");
+        // Paso 1: Registrar usuario
+        String uniqueUsername = "test_login_" + System.currentTimeMillis();
+        RegisterRequestDto registerRequest = new RegisterRequestDto();
+        registerRequest.setUsername(uniqueUsername);
+        registerRequest.setPassword("password123");
+        registerRequest.setEmail("test_login_" + System.currentTimeMillis() + "@example.com");
+        registerRequest.setRole(RolUsuarioEnum.USUARIO);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated());
+
+        // Paso 2: Hacer login con el usuario creado
+        LoginRequestDto loginRequest = new LoginRequestDto(uniqueUsername, "password123");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +91,7 @@ class AuthIntegrationTest {
         mockMvc.perform(get("/api/auth/roles"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].name").exists())
+                .andExpect(jsonPath("$[0].value").exists())
                 .andExpect(jsonPath("$[0].description").exists());
     }
 }
