@@ -3,6 +3,7 @@ package com.planilla_DAWI.cibertec.Controller;
 import com.planilla_DAWI.cibertec.Dto.JwtResponseDto;
 import com.planilla_DAWI.cibertec.Dto.LoginRequestDto;
 import com.planilla_DAWI.cibertec.Dto.RegisterRequestDto;
+import com.planilla_DAWI.cibertec.Dto.RegisterResponseDto;
 import com.planilla_DAWI.cibertec.Dto.RoleDTO;
 import com.planilla_DAWI.cibertec.Service.AuthService;
 import com.planilla_DAWI.cibertec.Utils.Enums.RolUsuarioEnum;
@@ -10,6 +11,7 @@ import com.planilla_DAWI.cibertec.Utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,10 +57,17 @@ public class AuthController {
     })
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequestDto registerRequest) {
         try {
-            String result = authService.registerUser(registerRequest);
-            return ResponseEntity.ok(result);
+            RegisterResponseDto result = authService.registerUser(registerRequest);
+            System.out.println("RegisterResponseDto creado: " + result);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error en registro: " + e.getMessage());
+            RegisterResponseDto errorResponse = new RegisterResponseDto(
+                    false,
+                    "Error en registro: " + e.getMessage(),
+                    null,
+                    null
+            );
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
     @GetMapping("/roles")

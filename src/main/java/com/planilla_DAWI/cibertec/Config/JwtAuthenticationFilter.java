@@ -32,6 +32,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        
+        // No aplicar el filtro a endpoints públicos
+        boolean isPublic = path.startsWith("/api/auth/") || 
+                          path.startsWith("/api/enums/") ||
+                          path.startsWith("/swagger-ui") ||
+                          path.startsWith("/v3/api-docs") ||
+                          path.startsWith("/swagger-resources") ||
+                          path.startsWith("/webjars");
+        
+        if (isPublic) {
+            logger.info("Endpoint público detectado: {} {}, saltando filtro JWT", method, path);
+            // Limpiar el SecurityContext para endpoints públicos
+            SecurityContextHolder.clearContext();
+        } else {
+            logger.debug("Endpoint protegido: {} {}", method, path);
+        }
+        
+        return isPublic;
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
@@ -46,7 +70,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt == null) {
                 logHeaders(request); // Mostrar todos los headers
             }
-
 
             if (jwt != null) {
                 // Extraer username del token
@@ -71,6 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e.getMessage());
+            // No bloquear la petición si hay un error, dejar que Spring Security maneje la autorización
         }
 
         filterChain.doFilter(request, response);

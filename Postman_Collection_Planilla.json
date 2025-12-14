@@ -1,0 +1,486 @@
+{
+	"info": {
+		"_postman_id": "planilla-api-tests",
+		"name": "Planilla API - Pruebas de Calidad",
+		"description": "Colección de pruebas para el sistema de Planilla. Incluye casos de prueba para autenticación, gestión de cargos y asistencias.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticación",
+			"item": [
+				{
+					"name": "1. Login Exitoso",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.exist;",
+									"    pm.expect(jsonData.type).to.eql(\"Bearer\");",
+									"    ",
+									"    // Guardar token para uso en otras peticiones",
+									"    pm.environment.set(\"auth_token\", jsonData.token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "**Caso de Prueba 1: Login Exitoso**\n\n**Precondición:** Usuario debe existir en la base de datos\n\n**Pasos:**\n1. Enviar POST a /api/auth/login\n2. Incluir credenciales válidas en el body\n\n**Resultado Esperado:**\n- Status 200 OK\n- Respuesta contiene token JWT\n- Token tipo Bearer\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Login Fallido - Credenciales Inválidas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response contains error message\", function () {",
+									"    var responseText = pm.response.text();",
+									"    pm.expect(responseText).to.include(\"Error\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"usuario_inexistente\",\n    \"password\": \"password_incorrecto\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "**Caso de Prueba 2: Login Fallido**\n\n**Precondición:** Usuario no existe o credenciales incorrectas\n\n**Pasos:**\n1. Enviar POST a /api/auth/login\n2. Incluir credenciales inválidas\n\n**Resultado Esperado:**\n- Status 400 Bad Request\n- Mensaje de error en la respuesta\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Registrar Nuevo Usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"User registered successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.username).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"nuevo_usuario\",\n    \"password\": \"password123\",\n    \"email\": \"nuevo@example.com\",\n    \"role\": \"USUARIO\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "**Caso de Prueba 3: Registro de Usuario**\n\n**Precondición:** El usuario no debe existir en la base de datos\n\n**Pasos:**\n1. Enviar POST a /api/auth/register\n2. Incluir datos válidos del nuevo usuario\n\n**Resultado Esperado:**\n- Status 201 Created\n- success: true\n- username en la respuesta\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Obtener Roles Disponibles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/roles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"roles"
+							]
+						},
+						"description": "**Caso de Prueba 4: Obtener Roles**\n\n**Precondición:** Ninguna\n\n**Pasos:**\n1. Enviar GET a /api/auth/roles\n\n**Resultado Esperado:**\n- Status 200 OK\n- Array con roles disponibles\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas para el módulo de autenticación"
+		},
+		{
+			"name": "Gestión de Cargos",
+			"item": [
+				{
+					"name": "1. Listar Cargos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has content array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.content).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cargos/listar?estado=TODOS&Texto=&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cargos",
+								"listar"
+							],
+							"query": [
+								{
+									"key": "estado",
+									"value": "TODOS"
+								},
+								{
+									"key": "Texto",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "**Caso de Prueba 1: Listar Cargos**\n\n**Precondición:** Usuario autenticado con token JWT válido\n\n**Pasos:**\n1. Obtener token de autenticación\n2. Enviar GET a /api/cargos/listar con token en header\n\n**Resultado Esperado:**\n- Status 200 OK\n- Lista paginada de cargos\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Crear Cargo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Cargo created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.exist;",
+									"    ",
+									"    // Guardar ID del cargo creado",
+									"    if (jsonData.data.idCargo) {",
+									"        pm.environment.set(\"cargo_id\", jsonData.data.idCargo);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Desarrollador Senior\",\n    \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cargos/insertar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cargos",
+								"insertar"
+							]
+						},
+						"description": "**Caso de Prueba 2: Crear Cargo**\n\n**Precondición:** Usuario autenticado con rol ADMINISTRADOR\n\n**Pasos:**\n1. Obtener token de autenticación\n2. Enviar POST a /api/cargos/insertar con datos del cargo\n\n**Resultado Esperado:**\n- Status 201 Created\n- success: true\n- data con el cargo creado\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Obtener Cargo por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Cargo data exists\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.idCargo).to.exist;",
+									"    pm.expect(jsonData.nombre).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cargos/obtenerById/{{cargo_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cargos",
+								"obtenerById",
+								"{{cargo_id}}"
+							]
+						},
+						"description": "**Caso de Prueba 3: Obtener Cargo por ID**\n\n**Precondición:** Cargo debe existir en la base de datos\n\n**Pasos:**\n1. Obtener token de autenticación\n2. Enviar GET a /api/cargos/obtenerById/{id}\n\n**Resultado Esperado:**\n- Status 200 OK\n- Datos del cargo solicitado\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas para el módulo de gestión de cargos"
+		},
+		{
+			"name": "Gestión de Asistencias",
+			"item": [
+				{
+					"name": "1. Listar Asistencias por Período",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/asistencias?año=2024&mes=12",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"asistencias"
+							],
+							"query": [
+								{
+									"key": "año",
+									"value": "2024"
+								},
+								{
+									"key": "mes",
+									"value": "12"
+								}
+							]
+						},
+						"description": "**Caso de Prueba 1: Listar Asistencias**\n\n**Precondición:** Usuario autenticado\n\n**Pasos:**\n1. Obtener token de autenticación\n2. Enviar GET a /api/asistencias con año y mes\n\n**Resultado Esperado:**\n- Status 200 OK\n- Lista de asistencias del período\n\n**Resultado Obtenido:** Verificar en la pestaña Test Results"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas para el módulo de gestión de asistencias"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cargo_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

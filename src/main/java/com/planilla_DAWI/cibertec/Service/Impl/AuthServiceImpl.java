@@ -3,6 +3,7 @@ package com.planilla_DAWI.cibertec.Service.Impl;
 import com.planilla_DAWI.cibertec.Dto.JwtResponseDto;
 import com.planilla_DAWI.cibertec.Dto.LoginRequestDto;
 import com.planilla_DAWI.cibertec.Dto.RegisterRequestDto;
+import com.planilla_DAWI.cibertec.Dto.RegisterResponseDto;
 import com.planilla_DAWI.cibertec.Entity.Usuario;
 import com.planilla_DAWI.cibertec.Repository.UsuarioRepository;
 import com.planilla_DAWI.cibertec.Service.AuthService;
@@ -52,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
         return new JwtResponseDto(jwt);
     }
     @Override
-    public String registerUser(RegisterRequestDto registerRequest) {
+    public RegisterResponseDto registerUser(RegisterRequestDto registerRequest) {
         // Validar que el username no exista
         if (usuarioRepository.existsByUsername(registerRequest.getUsername())) {
             throw new RuntimeException("El nombre de usuario ya está en uso");
@@ -82,8 +83,13 @@ public class AuthServiceImpl implements AuthService {
 
         usuarioRepository.save(usuario);
 
-        return String.format("Usuario %s registrado exitosamente como %s",
+        return new RegisterResponseDto(
+                true,
+                String.format("Usuario %s registrado exitosamente como %s",
+                        registerRequest.getUsername(),
+                        registerRequest.getRole().getDescription()),
                 registerRequest.getUsername(),
-                registerRequest.getRole().getDescription());
+                registerRequest.getRole().name()
+        );
     }
 }

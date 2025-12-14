@@ -58,7 +58,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Endpoints públicos (sin autenticación)
+                        // Endpoints públicos (sin autenticación) - DEBEN IR PRIMERO
+                        // Especificar explícitamente los métodos HTTP permitidos
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/enums/**").permitAll()
                         .requestMatchers("/api/chat/**").hasAnyRole("USUARIO", "ADMINISTRADOR")
@@ -140,6 +141,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                // El filtro JWT se ejecuta antes de UsernamePasswordAuthenticationFilter
+                // pero shouldNotFilter() lo excluirá para endpoints públicos
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

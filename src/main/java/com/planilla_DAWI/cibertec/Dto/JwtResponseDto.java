@@ -4,6 +4,9 @@ public class JwtResponseDto {
     private String token;
     private String type = "Bearer";
 
+    public JwtResponseDto() {
+    }
+
     public JwtResponseDto(String token) {
         this.token = token;
     }
